@@ -1,0 +1,10 @@
+node_modules/
+artifacts/
+cache/
+data/*.json
+*.log
+proof.json
+main.pdf
+main.tex
+.qoder/
+.DS_Store
