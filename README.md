@@ -1,4 +1,4 @@
-# Data Ownership Confirmation and Arbitration Based on Blockchain
+# Scalable and Dynamic Data Ownership Confirmation
 
 Data ownership confirmation is a prerequisite for trustworthy data circulation.
 Existing blockchain-based schemes often register each data item independently,
