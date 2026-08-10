@@ -64,10 +64,6 @@ The off-chain experiments require Go 1.21 or later. Install the Go module once:
 go mod download
 ```
 
-This artifact does not currently include Go unit-test files. The off-chain
-evaluation workflows for the Go prototype are the Figure 4--6 experiments
-documented below.
-
 The plotting scripts require Python 3 with `matplotlib` and `numpy`:
 
 ```bash

@@ -70,9 +70,8 @@ and acceptance or rejection of layered membership proofs.
 
 ## Notes on Off-Chain Results
 
-The Go prototype can be installed with `go mod download`. This artifact does
-not currently include Go unit-test files. Wall-clock results for ADS
-construction and update operations depend on CPU, memory, Go version, and
-dataset layout. The raw real-world datasets are not redistributed in this
+The Go prototype can be installed with `go mod download`. Wall-clock results
+for ADS construction and update operations depend on CPU, memory, Go version,
+and dataset layout. The raw real-world datasets are not redistributed in this
 repository; users should prepare them with `cmd/preprocessor/main.go` as
 described in `README.md`.
