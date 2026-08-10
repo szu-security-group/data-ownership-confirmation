@@ -4,7 +4,11 @@ cache/
 data/*.json
 *.log
 proof.json
+reproduction/
 main.pdf
 main.tex
 .qoder/
 .DS_Store
+__pycache__/
+*.pyc
+work1-draw/.venv/

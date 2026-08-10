@@ -52,7 +52,7 @@ The system includes the following entities.
 
 ## Usage
 
-### Installation
+### Off-Chain Prototype Installation
 
 The prototype is written in Go. Make sure Go 1.21 or later is installed.
 
@@ -66,6 +66,33 @@ Run a quick sanity check:
 go test ./...
 go run main.go --n 100 --m 5 --repeat 1 --iterations 5 --silent
 ```
+
+### Reproduce Table III: On-Chain Gas Cost
+
+The Table III harness uses a local Hardhat network and needs only Node.js 20.x
+and npm. It does not require raw datasets, an RPC endpoint, or a private key.
+
+```bash
+npm ci
+npm run reproduce:table3
+```
+
+The command compiles from a clean Hardhat state, deploys both contracts,
+measures all Table III gas values, and writes:
+
+```text
+reproduction/table-iii-gas.json
+reproduction/table-iii-gas.md
+```
+
+To run the contract behavior tests:
+
+```bash
+npm test
+```
+
+See [REPRODUCIBILITY.md](REPRODUCIBILITY.md) for the pinned environment,
+measurement scope, and output interpretation.
 
 ### Run a Synthetic Benchmark
 
@@ -155,8 +182,8 @@ main.go        benchmark and proof-generation entry point
 ```
 
 The `contracts/` directory contains the smart contract source code used by the
-scheme. Hardhat deployment scripts and JavaScript tests are intentionally not
-included in this artifact.
+scheme. The Hardhat deployment harness, deterministic Table III reproduction
+script, and JavaScript contract tests are included in this artifact.
 
 ## Notes
 

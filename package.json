@@ -1,0 +1,22 @@
+{
+  "name": "data-ownership-confirmation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Hardhat harness for reproducing the on-chain gas evaluation",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy": "hardhat run scripts/deploy.js",
+    "test": "hardhat test",
+    "gas:table3": "hardhat run scripts/reproduce-table-iii.js",
+    "reproduce:table3": "hardhat clean && hardhat run scripts/reproduce-table-iii.js"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ethers": "3.0.8",
+    "ethers": "6.13.4",
+    "hardhat": "2.22.15",
+    "solc": "0.8.19"
+  }
+}
