@@ -4,6 +4,12 @@ This repository contains the Go prototype and Solidity contracts used in the
 paper. This guide documents the deterministic reproduction path for Table III,
 the on-chain gas evaluation.
 
+For the complete reproduction entry points for Table III and Figures 4--6,
+including real-dataset downloads, preprocessing, synthetic-data generation,
+benchmark parameters, and plotting commands, see the
+[Reproduce section in README.md](README.md#reproduce). This document provides
+the Table III-specific environment and fixture details.
+
 ## Scope
 
 The Table III harness reproduces gas consumption for contract deployment,
@@ -64,8 +70,9 @@ and acceptance or rejection of layered membership proofs.
 
 ## Notes on Off-Chain Results
 
-The Go prototype can be installed with `go mod download` and checked with
-`go test ./...`. Wall-clock results for ADS construction and update operations
-depend on CPU, memory, Go version, and dataset layout. The raw real-world
-datasets are not redistributed in this repository; users should prepare them
-with `cmd/preprocessor/main.go` as described in `README.md`.
+The Go prototype can be installed with `go mod download`. This artifact does
+not currently include Go unit-test files. Wall-clock results for ADS
+construction and update operations depend on CPU, memory, Go version, and
+dataset layout. The raw real-world datasets are not redistributed in this
+repository; users should prepare them with `cmd/preprocessor/main.go` as
+described in `README.md`.
