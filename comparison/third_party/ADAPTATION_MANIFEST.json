@@ -1,0 +1,30 @@
+{
+  "iavl/internal/keccakhash/hash.go": {
+    "upstream_sha256": null,
+    "adapted_sha256": "71075d6d65fdb655501cf324d4168288cdc01dc604fcd69869d0d219ea6665ba"
+  },
+  "iavl/node.go": {
+    "upstream_sha256": "15d288d6f4d648a295a5055e514cd187cf5e0d56bca0cc820b711e2af993a9ee",
+    "adapted_sha256": "72f24e81775c4bc21cea53bc5e866157d19ed0ed4af8921bb4bac1411842d596"
+  },
+  "iavl/nodedb.go": {
+    "upstream_sha256": "12fb8b4e5c4884d81f89ffc8e43fe8620216fe2691b84c81ec89bc27ddf3415e",
+    "adapted_sha256": "8808ff5b4bf5ac53c0e189688d3a32fe426bc507085ebbaf6f5dc75b7d6e2168"
+  },
+  "iavl/proof.go": {
+    "upstream_sha256": "6d7aa7fff14a06d23976b5af430c60efc9dcbd7148355ac64db3048139641a1c",
+    "adapted_sha256": "1d2e1d5009f1bfc075b990a2bcea7b61c00c081b55112b5f4a421b8af7406698"
+  },
+  "iavl/proof_ics23.go": {
+    "upstream_sha256": "d1a4c4d15a61e77c942df22289609c85633b795797d2a7914bbff9103cfd044e",
+    "adapted_sha256": "560364d8c41769a4ecba6ad76e8d2f68ab9282f511f369d6b3ad6d74319df9a4"
+  },
+  "ics23/ops.go": {
+    "upstream_sha256": "fbf0e691c9ad104c0eaebf035464dc72eadf6f998138120d5df91852471437f7",
+    "adapted_sha256": "b07d695bf01bf4322ef5ce9111a9e6df551933eef79e8913be02d8032fc763ef"
+  },
+  "ics23/proof.go": {
+    "upstream_sha256": "27ea2d63c71ac05d1108e69ddc3ac7f3bbd5f6995a630dedbf2d95ffc550a004",
+    "adapted_sha256": "00dd37fc697754773f3e3dc8681a448cc10c9c0d63d8d8f3cbb5e78ff8e3c01b"
+  }
+}

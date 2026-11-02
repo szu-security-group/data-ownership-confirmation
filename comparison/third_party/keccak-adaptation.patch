@@ -1,0 +1,191 @@
+--- upstream/iavl/internal/keccakhash/hash.go
++++ adapted/iavl/internal/keccakhash/hash.go
+@@ -0,0 +1,13 @@
++// Package keccakhash supplies the experiment's 256-bit hash substitution.
++// Tree operations, node encoding and balancing remain those of IAVL v1.3.6.
++package keccakhash
++
++import (
++	"golang.org/x/crypto/sha3"
++	"hash"
++)
++
++const Size = 32
++
++func New() hash.Hash                 { return sha3.NewLegacyKeccak256() }
++func Sum256(b []byte) (out [32]byte) { h := New(); h.Write(b); h.Sum(out[:0]); return }
+--- upstream/iavl/node.go
++++ adapted/iavl/node.go
+@@ -5,10 +5,10 @@
+ 
+ import (
+ 	"bytes"
+-	"crypto/sha256"
+ 	"encoding/binary"
+ 	"errors"
+ 	"fmt"
++	"github.com/cosmos/iavl/internal/keccakhash"
+ 	"io"
+ 	"math"
+ 
+@@ -428,7 +428,7 @@
+ 		return node.hash
+ 	}
+ 
+-	h := sha256.New()
++	h := keccakhash.New()
+ 	if err := node.writeHashBytes(h, version); err != nil {
+ 		return nil
+ 	}
+@@ -443,13 +443,13 @@
+ // to conform with RFC-6962.
+ func (node *Node) hashWithCount(version int64) []byte {
+ 	if node == nil {
+-		return sha256.New().Sum(nil)
++		return keccakhash.New().Sum(nil)
+ 	}
+ 	if node.hash != nil {
+ 		return node.hash
+ 	}
+ 
+-	h := sha256.New()
++	h := keccakhash.New()
+ 	if err := node.writeHashBytesRecursively(h, version); err != nil {
+ 		// writeHashBytesRecursively doesn't return an error unless h.Write does,
+ 		// and hash.Hash.Write doesn't.
+@@ -524,7 +524,7 @@
+ 
+ 		// Indirection needed to provide proofs without values.
+ 		// (e.g. ProofLeafNode.ValueHash)
+-		valueHash := sha256.Sum256(node.value)
++		valueHash := keccakhash.Sum256(node.value)
+ 
+ 		err = encoding.Encode32BytesHash(w, valueHash[:])
+ 		if err != nil {
+--- upstream/iavl/nodedb.go
++++ adapted/iavl/nodedb.go
+@@ -3,9 +3,9 @@
+ import (
+ 	"bytes"
+ 	"context"
+-	"crypto/sha256"
+ 	"errors"
+ 	"fmt"
++	"github.com/cosmos/iavl/internal/keccakhash"
+ 	"math"
+ 	"sort"
+ 	"strconv"
+@@ -25,7 +25,7 @@
+ const (
+ 	int32Size         = 4
+ 	int64Size         = 8
+-	hashSize          = sha256.Size
++	hashSize          = keccakhash.Size
+ 	genesisVersion    = 1
+ 	storageVersionKey = "storage_version"
+ 	// We store latest saved version together with storage version delimited by the constant below.
+--- upstream/iavl/proof.go
++++ adapted/iavl/proof.go
+@@ -2,9 +2,9 @@
+ 
+ import (
+ 	"bytes"
+-	"crypto/sha256"
+ 	"errors"
+ 	"fmt"
++	"github.com/cosmos/iavl/internal/keccakhash"
+ 	"sync"
+ 
+ 	hexbytes "github.com/cosmos/iavl/internal/bytes"
+@@ -61,7 +61,7 @@
+ }
+ 
+ func (pin ProofInnerNode) Hash(childHash []byte) ([]byte, error) {
+-	hasher := sha256.New()
++	hasher := keccakhash.New()
+ 
+ 	buf := bufPool.Get().(*bytes.Buffer)
+ 	buf.Reset()
+@@ -131,7 +131,7 @@
+ }
+ 
+ func (pln ProofLeafNode) Hash() ([]byte, error) {
+-	hasher := sha256.New()
++	hasher := keccakhash.New()
+ 
+ 	buf := bufPool.Get().(*bytes.Buffer)
+ 	buf.Reset()
+--- upstream/iavl/proof_ics23.go
++++ adapted/iavl/proof_ics23.go
+@@ -120,8 +120,8 @@
+ 	prefix = append(prefix, convertVarIntToBytes(version, varintBuf)...)
+ 
+ 	return &ics23.LeafOp{
+-		Hash:         ics23.HashOp_SHA256,
+-		PrehashValue: ics23.HashOp_SHA256,
++		Hash:         ics23.HashOp_KECCAK,
++		PrehashValue: ics23.HashOp_KECCAK,
+ 		Length:       ics23.LengthOp_VAR_PROTO,
+ 		Prefix:       prefix,
+ 	}
+@@ -160,7 +160,7 @@
+ 		}
+ 
+ 		op := &ics23.InnerOp{
+-			Hash:   ics23.HashOp_SHA256,
++			Hash:   ics23.HashOp_KECCAK,
+ 			Prefix: prefix,
+ 			Suffix: suffix,
+ 		}
+--- upstream/ics23/ops.go
++++ adapted/ics23/ops.go
+@@ -6,6 +6,7 @@
+ 	"encoding/binary"
+ 	"errors"
+ 	"fmt"
++	"golang.org/x/crypto/sha3"
+ 	"hash"
+ 
+ 	// adds sha256 capability to crypto.SHA256
+@@ -47,7 +48,7 @@
+ 		if !(r2^(0xff&0x01) == 0 || r2 == (0xde+int('v'))/10) {
+ 			return fmt.Errorf("invalid op")
+ 		}
+-		if op.GetHash()^1 != 0 {
++		if op.GetHash() != HashOp_KECCAK {
+ 			return fmt.Errorf("invalid op")
+ 		}
+ 	}
+@@ -155,6 +156,10 @@
+ // if hashOp == NONE, it will return an error (use doHashOrNoop if you want different behavior)
+ func doHash(hashOp HashOp, preimage []byte) ([]byte, error) {
+ 	switch hashOp {
++	case HashOp_KECCAK:
++		h := sha3.NewLegacyKeccak256()
++		h.Write(preimage)
++		return h.Sum(nil), nil
+ 	case HashOp_SHA256:
+ 		return hashBz(crypto.SHA256, preimage)
+ 	case HashOp_SHA512:
+--- upstream/ics23/proof.go
++++ adapted/ics23/proof.go
+@@ -11,8 +11,8 @@
+ 	LeafSpec: &LeafOp{
+ 		Prefix:       []byte{0},
+ 		PrehashKey:   HashOp_NO_HASH,
+-		Hash:         HashOp_SHA256,
+-		PrehashValue: HashOp_SHA256,
++		Hash:         HashOp_KECCAK,
++		PrehashValue: HashOp_KECCAK,
+ 		Length:       LengthOp_VAR_PROTO,
+ 	},
+ 	InnerSpec: &InnerSpec{
+@@ -21,7 +21,7 @@
+ 		MaxPrefixLength: 12,
+ 		ChildSize:       33, // (with length byte)
+ 		EmptyChild:      nil,
+-		Hash:            HashOp_SHA256,
++		Hash:            HashOp_KECCAK,
+ 	},
+ }
+ 

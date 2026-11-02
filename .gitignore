@@ -1,6 +1,6 @@
 node_modules/
 artifacts/
-cache/
+/cache/
 data/*.json
 *.log
 proof.json
@@ -12,3 +12,19 @@ main.tex
 __pycache__/
 *.pyc
 work1-draw/.venv/
+
+# Local tools, datasets and generated build products
+.idea/
+.venv/
+**/.venv/
+*.aux
+*.fdb_latexmk
+*.fls
+*.xdv
+*.out
+evaluation/bench
+evaluation/data/
+
+# Generated HT evaluation results
+evaluation/results/
+evaluation/output/

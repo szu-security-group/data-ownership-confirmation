@@ -1,0 +1,20 @@
+datasets/
+bin/
+tmp/
+*.log
+__pycache__/
+
+*.zip
+*.tar.gz
+.venv/
+
+# Preserve the dataset integrity manifest without publishing raw media.
+!datasets/
+datasets/*
+!datasets/validation.json
+# Upstream test fixtures are required for vendored library tests.
+!third_party/**/testdata/**/*.log
+
+# Generated measurements and figures are not source code.
+/results/
+/output/
