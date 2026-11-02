@@ -1,6 +1,6 @@
 """Verify external module archives without treating local source as an archive.
 
-The prototype is a local test oracle. Its files, and the adapted IAVL/ICS23
+The independent reference implementation is a local test oracle. Its files, and the adapted IAVL/ICS23
 sources, are checked against environment.json by audit_results.py.
 """
 from pathlib import Path

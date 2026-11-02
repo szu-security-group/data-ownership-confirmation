@@ -3,44 +3,10 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"math/rand"
 	c "ownership-comparison"
-	"strings"
 	"testing"
 )
-
-func TestChurnPreservesNamingAndCategoryCounts(t *testing.T) {
-	live := make([]c.Item, 70)
-	counts := map[int]int{}
-	for j := range live {
-		live[j] = makeItem(j, j%7)
-		counts[j%7]++
-	}
-	r := rand.New(rand.NewSource(127))
-	seen := map[string]bool{}
-	for j := 0; j < 1000; j++ {
-		i, index := nextChurnItem(r, live, len(live)+j)
-		if i.Category != live[index].Category {
-			t.Fatal("churn changed category cardinality")
-		}
-		if !strings.HasPrefix(i.URL, fmt.Sprintf("http://example.test/c%04d/", i.Category)) {
-			t.Fatalf("URL and routing category disagree: %+v", i)
-		}
-		if seen[i.URL] {
-			t.Fatal("new URL was reused")
-		}
-		seen[i.URL] = true
-		counts[live[index].Category]--
-		counts[i.Category]++
-		live[index] = i
-	}
-	for _, n := range counts {
-		if n != 10 {
-			t.Fatal("category size drifted")
-		}
-	}
-}
 
 func TestFixedSizeInsertionAndProofTiming(t *testing.T) {
 	oldKind, oldLayout, oldN, oldM, oldOps, oldBudget, oldNames, oldEncoder := *kind, *layout, *n, *m, *ops, *phaseBudget, categoryNames, enc

@@ -8,10 +8,6 @@ __pycache__/
 *.tar.gz
 .venv/
 
-# Preserve the dataset integrity manifest without publishing raw media.
-!datasets/
-datasets/*
-!datasets/validation.json
 # Upstream test fixtures are required for vendored library tests.
 !third_party/**/testdata/**/*.log
 

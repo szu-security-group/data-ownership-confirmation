@@ -4,9 +4,10 @@ import hashlib,json,os,platform,subprocess,time
 root=Path(__file__).resolve().parent
 output=root/'results/environment.json'
 if output.exists():raise SystemExit('Environment already frozen. Use a fresh reproduction copy; do not overwrite provenance of existing measurements.')
-files=[p for p in (root/'third_party').rglob('*') if p.is_file()]+list(root.glob('*.go'))+list((root/'cmd').rglob('*.go'))+[root/'go.mod',root/'go.sum',root/'run_suite.py',root/'run_experiment.py']
+files=[p for p in (root/'third_party').rglob('*') if p.is_file()]+list(root.glob('*.go'))+list((root/'cmd').rglob('*.go'))+[root/'go.mod',root/'go.sum',root/'run_experiment.py']
+files += list((root/'internal').rglob('*.go'))
 files += [root.parent/'go.mod',root.parent/'go.sum']
-for folder in ['auth','hashtable','merkle','pkg','utils']:
+for folder in ['pkg','utils']:
  files += list((root.parent/folder).rglob('*.go'))
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 def command(*args):return subprocess.check_output(args,text=True).strip()

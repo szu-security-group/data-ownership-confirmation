@@ -2,13 +2,13 @@ package comparison
 
 import (
 	"bytes"
-	"data-ownership-system/auth"
 	"data-ownership-system/pkg/types"
 	"fmt"
+	"ownership-comparison/internal/reference/auth"
 	"testing"
 )
 
-func TestPerCategoryMatchesCurrentAndPrototype(t *testing.T) {
+func TestPerCategoryMatchesReference(t *testing.T) {
 	for _, m := range []int{1, 10, 100, 1000} {
 		t.Run(fmt.Sprint(m), func(t *testing.T) {
 			xs := sample(2053, m)
@@ -42,7 +42,7 @@ func TestPerCategoryMatchesCurrentAndPrototype(t *testing.T) {
 			}
 			root := one.Root()
 			if !bytes.Equal(root[:], ref.GetTopRoot()) {
-				t.Fatal("prototype root mismatch")
+				t.Fatal("reference root mismatch")
 			}
 			for _, j := range []int{0, len(xs) / 2, len(xs) - 1} {
 				p, e := one.Prove(xs[j])

@@ -6,12 +6,12 @@ import argparse, subprocess, json, random, time, hashlib, platform, os, re
 ROOT=Path(__file__).resolve().parent
 p=argparse.ArgumentParser();p.add_argument('--profile',choices=['smoke','paper'],default='paper');p.add_argument('--binary',type=Path,default=ROOT/'bin/bench');a=p.parse_args()
 out=ROOT/'results'/a.profile;out.mkdir(parents=True,exist_ok=True)
-(out/'jobs').mkdir(exist_ok=True);(out/'proofs').mkdir(exist_ok=True);(out/'traces').mkdir(exist_ok=True)
+(out/'jobs').mkdir(exist_ok=True);(out/'proofs').mkdir(exist_ok=True)
 kinds=['ht','merkle','iavl','smt','mpt'];jobs=[]
 def add(group,kind,layout,n,m=10,threads=None,workload='steady',dataset='',ops=10000,seeds=range(1,6),repeats=range(1)):
  for seed in seeds:
   for repeat in repeats:
-   jobs.append(dict(group=group,kind=kind,layout=layout,n=n,m=m,threads=threads or (1 if layout=='global' else 4),workload=workload,dataset=dataset,ops=ops,seed=seed,repeat=repeat))
+   jobs.append(dict(group=group,kind=kind,layout=layout,n=n,m=m,threads=threads or 4,workload=workload,dataset=dataset,ops=ops,seed=seed,repeat=repeat))
 if a.profile=='smoke':
  for k in kinds:
   for l in ['flat']: add('smoke',k,l,1000,m=5,ops=50,seeds=[1],repeats=[0])
@@ -33,7 +33,7 @@ start=time.time();completed=0
 for j in jobs:
  key=hashlib.sha256(json.dumps(j,sort_keys=True).encode()).hexdigest()[:16];dest=out/'jobs'/f'{key}.jsonl'
  if dest.exists():completed+=1;continue
- tmp=dest.with_suffix('.partial');tmp.write_text('');proof=out/'proofs'/f'{key}.jsonl';proof.write_text('');trace=out/'traces'/f'{key}.jsonl'
+ tmp=dest.with_suffix('.partial');tmp.write_text('');proof=out/'proofs'/f'{key}.jsonl';proof.write_text('')
  cmd=[str(binary),'--out',str(tmp)]
  cmd += ['--steady-budget','10']
  for k in ['kind','layout','n','m','threads','workload','ops','seed','repeat']:cmd+=['--'+k,str(j[k])]

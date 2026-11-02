@@ -10,7 +10,7 @@ This module compares five interchangeable components under identical inputs, ope
 | SMT | celestiaorg/smt v0.3.0 | Keccak-256, compact membership proofs |
 | MPT | go-ethereum v1.17.2 | In-memory trie, Keccak-256 keys, native RLP proof nodes |
 
-IAVL and ICS23 Go v0.10.0 are included in `third_party/`. The Keccak adaptation changes hashing and proof verification while preserving node encodings and AVL balancing rules. The patch, source checksums and upstream licenses accompany the source. The parent module supplies shared data types and compatibility tests; clone the entire repository.
+IAVL and ICS23 Go v0.10.0 are included in `third_party/`. The Keccak adaptation changes hashing and proof verification while preserving node encodings and AVL balancing rules. The patch, source checksums and upstream licenses accompany the source. The parent module supplies shared data types and hashing utilities; clone the entire repository. The independent implementation under `internal/reference/` is used only by correctness tests to check authentication encodings and operation semantics; benchmarks use `dense.go`.
 
 ## Setup and datasets
 

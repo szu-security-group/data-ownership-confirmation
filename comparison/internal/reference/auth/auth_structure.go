@@ -2,11 +2,11 @@ package auth
 
 import (
 	"bytes"
-	"data-ownership-system/hashtable"
-	"data-ownership-system/merkle"
 	"data-ownership-system/pkg/types"
 	"data-ownership-system/utils"
 	"fmt"
+	"ownership-comparison/internal/reference/hashtable"
+	"ownership-comparison/internal/reference/merkle"
 	"strings"
 	"sync"
 )

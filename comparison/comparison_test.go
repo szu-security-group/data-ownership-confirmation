@@ -14,9 +14,9 @@ func sample(n, m int) []Item {
 	}
 	return x
 }
-func TestAllAdaptersAndLayouts(t *testing.T) {
+func TestAllAdapters(t *testing.T) {
 	for _, k := range Kinds {
-		for _, l := range []string{"global", "flat", "tree"} {
+		for _, l := range []string{"flat"} {
 			t.Run(k+"/"+l, func(t *testing.T) {
 				xs := sample(137, 5)
 				f, e := NewForest(k, l, 5, 3, .75)
@@ -138,39 +138,6 @@ func TestRandomizedStateMachine(t *testing.T) {
 				}
 			}
 		})
-	}
-}
-func TestCategoryDynamics(t *testing.T) {
-	for _, k := range Kinds {
-		for _, layout := range []string{"global", "flat", "tree"} {
-			f, _ := NewForest(k, layout, 2, 2, .75)
-			xs := sample(60, 2)
-			if e := f.Build(xs); e != nil {
-				t.Fatal(e)
-			}
-			extra := []Item{{"http://new/category/item", Sum([]byte("v")), 2}}
-			if e := f.AddCategory(extra); e != nil {
-				t.Fatal(e)
-			}
-			p, e := f.Prove(extra[0])
-			if e != nil || !Verify(k, f.Root(), extra[0], p) {
-				t.Fatalf("category insert %s %s %v", k, layout, e)
-			}
-			beforeDrop := f.Stats()
-			if e = f.DropLastCategory(extra); e != nil {
-				t.Fatal(e)
-			}
-			dropWork := f.Stats().Sub(beforeDrop)
-			if layout == "flat" && (dropWork.HashCalls != 1 || dropWork.HashBytes != 64 || dropWork.Probes != 0 || dropWork.Rotations != 0 || dropWork.Rebuilds != 0 || dropWork.RehashedItems != 0) {
-				t.Fatalf("category retirement lost cumulative counters for %s: %+v", k, dropWork)
-			}
-			if layout != "global" && f.Parts[:cap(f.Parts)][len(f.Parts)] != nil {
-				t.Fatal("retired category remains reachable through backing storage")
-			}
-			if _, e = f.Prove(extra[0]); e == nil {
-				t.Fatal("dropped category still accessible")
-			}
-		}
 	}
 }
 func FuzzProofParsing(f *testing.F) {

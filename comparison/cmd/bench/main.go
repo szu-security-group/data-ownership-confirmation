@@ -12,7 +12,6 @@ import (
 	c "ownership-comparison"
 	"runtime"
 	"sort"
-	"strings"
 	"time"
 )
 
@@ -44,10 +43,10 @@ type Result struct {
 }
 
 var kind = flag.String("kind", "ht", "")
-var layout = flag.String("layout", "global", "")
+var layout = flag.String("layout", "flat", "category subtrees with ordered root aggregation")
 var n = flag.Int("n", 10000, "")
 var m = flag.Int("m", 10, "")
-var threads = flag.Int("threads", 1, "")
+var threads = flag.Int("threads", 4, "construction workers and GOMAXPROCS")
 var seed = flag.Int64("seed", 1, "")
 var repeat = flag.Int("repeat", 0, "")
 var ops = flag.Int("ops", 10000, "")
@@ -55,11 +54,8 @@ var workload = flag.String("workload", "steady", "")
 var dataset = flag.String("dataset", "", "")
 var output = flag.String("out", "", "")
 var proofout = flag.String("proof-out", "", "")
-var traceout = flag.String("trace-out", "", "")
 var load = flag.Float64("load", .75, "")
 var phaseBudget = flag.Float64("steady-budget", 10, "seconds per mutation phase including untimed insertion cleanup")
-var dynamicBudget = flag.Float64("dynamic-budget", 60, "seconds per dynamic phase")
-var categoryBudget = flag.Float64("category-budget", 60, "seconds per category operation")
 var enc *json.Encoder
 var categoryNames []string
 
@@ -162,6 +158,9 @@ func report(op string, ns []float64, stats c.Metrics, proofBytes float64, extra 
 }
 func main() {
 	flag.Parse()
+	if *layout != "flat" || *workload != "steady" {
+		panic("supported configuration: --layout flat --workload steady")
+	}
 	runtime.GOMAXPROCS(*threads)
 	if *output != "" {
 		f, e := os.OpenFile(*output, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
@@ -176,9 +175,7 @@ func main() {
 	start := time.Now()
 	f, e := c.NewForest(*kind, *layout, *m, *threads, *load)
 	check(e)
-	if *layout != "global" {
-		check(f.ConfigureCategories(categoryNames))
-	}
+	check(f.ConfigureCategories(categoryNames))
 	check(f.Build(xs))
 	build := time.Since(start)
 	runtime.GC()
@@ -189,16 +186,8 @@ func main() {
 	v.TotalNS = v.MeanNS
 	v.Stats = f.Stats()
 	check(enc.Encode(v))
-	switch *workload {
-	case "steady":
-		steady(f, xs)
-	case "growth", "hotspot", "churn":
-		dynamic(f, xs)
-	case "category":
-		categories(f, xs)
-	default:
-		panic("unknown workload")
-	}
+	steady(f, xs)
+
 	runtime.KeepAlive(xs)
 	runtime.KeepAlive(f)
 }
@@ -328,118 +317,3 @@ func steady(f *c.Forest, xs []c.Item) {
 		prefixComplete = prefixComplete && completed == *ops
 	}
 }
-
-func nextChurnItem(r *rand.Rand, live []c.Item, id int) (c.Item, int) {
-	index := r.Intn(len(live))
-	return makeItem(id, live[index].Category), index
-}
-
-func dynamic(f *c.Forest, xs []c.Item) {
-	r := rand.New(rand.NewSource(*seed + 123))
-	steps := *ops
-	ns := make([]float64, 0, steps)
-	s := f.Stats()
-	var tr *json.Encoder
-	var tf *os.File
-	if *traceout != "" {
-		var e error
-		tf, e = os.Create(*traceout)
-		check(e)
-		defer tf.Close()
-		tr = json.NewEncoder(tf)
-	}
-	total := 0.
-	events := []map[string]any{}
-	window := []float64{}
-	live := append([]c.Item(nil), xs...)
-	phaseStart := time.Now()
-	for j := 0; j < steps; j++ {
-		if j > 0 && time.Since(phaseStart).Seconds() >= *dynamicBudget {
-			break
-		}
-		cat := r.Intn(*m)
-		if *workload == "hotspot" && r.Float64() < .9 {
-			cat = r.Intn(max(1, *m/10))
-		}
-		var i c.Item
-		deleteIndex := -1
-		if *workload == "churn" {
-			i, deleteIndex = nextChurnItem(r, live, *n+j)
-		} else {
-			i = makeItem(*n+j, cat)
-		}
-		st := f.Stats()
-		t := time.Now()
-		if *workload == "churn" {
-			check(f.Apply("delete", live[deleteIndex]))
-			check(f.Apply("insert", i))
-			live[deleteIndex] = i
-		} else {
-			check(f.Apply("insert", i))
-		}
-		elapsed := float64(time.Since(t).Nanoseconds())
-		total += elapsed
-		ns = append(ns, elapsed)
-		window = append(window, elapsed)
-		diff := f.Stats().Sub(st)
-		if diff.Rebuilds > 0 {
-			events = append(events, map[string]any{"step": j + 1, "ns": elapsed, "items": diff.RehashedItems})
-			if tr != nil {
-				check(tr.Encode(map[string]any{"step": j + 1, "ns": elapsed, "total_ns": total, "rebuild": true, "items": diff.RehashedItems}))
-			}
-		}
-		if tr != nil && (j+1)%1000 == 0 {
-			sort.Float64s(window)
-			check(tr.Encode(map[string]any{"step": j + 1, "ns": window[len(window)/2], "p99_ns": window[int(float64(len(window)-1)*.99)], "max_ns": window[len(window)-1], "total_ns": total, "rebuild": false}))
-			window = window[:0]
-		}
-	}
-	measuredWork := f.Stats().Sub(s)
-	checkedMembers := 0
-	if *workload == "churn" {
-		for j := 0; j < min(100, len(live)); j++ {
-			i := live[(j*7919)%len(live)]
-			p, e := f.Prove(i)
-			check(e)
-			if !c.Verify(*kind, f.Root(), i, p) {
-				panic("final churn membership rejected")
-			}
-			checkedMembers++
-		}
-	}
-	report(*workload, ns, measuredWork, 0, map[string]any{"requested_count": steps, "phase_seconds": time.Since(phaseStart).Seconds(), "events": events, "transaction_unit": map[bool]string{true: "delete+insert pair", false: "insert"}[*workload == "churn"], "final_membership_checks": checkedMembers})
-	runtime.KeepAlive(live)
-}
-func categories(f *c.Forest, xs []c.Item) {
-	for _, fraction := range []float64{.01, .1, .3} {
-		k := int(float64(*n) * fraction)
-		extra := make([]c.Item, k)
-		for j := range extra {
-			extra[j] = makeItem(*n+j, *m)
-		}
-		for _, op := range []string{"add_category", "drop_category"} {
-			st := f.Stats()
-			t := time.Now()
-			c.CategoryDeadline = t.Add(time.Duration(*categoryBudget * float64(time.Second)))
-			var e error
-			if op == "add_category" {
-				e = f.AddCategory(extra)
-			} else {
-				e = f.DropLastCategory(extra)
-			}
-			c.CategoryDeadline = time.Time{}
-			status := "complete"
-			if e == c.ErrBudget {
-				status = "budget_exceeded"
-			} else {
-				check(e)
-			}
-			report(op, []float64{float64(time.Since(t).Nanoseconds())}, f.Stats().Sub(st), 0, map[string]any{"fraction": fraction, "items": k, "includes_gc": false, "status": status, "completed_items": c.CategoryCompleted, "requested_count": 1})
-			if status != "complete" {
-				return
-			}
-		}
-	}
-}
-
-var _ = strings.Compare

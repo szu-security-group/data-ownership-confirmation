@@ -2,16 +2,16 @@ package comparison
 
 import (
 	"bytes"
-	"data-ownership-system/auth"
 	"data-ownership-system/pkg/types"
 	"fmt"
 	"math/rand"
+	"ownership-comparison/internal/reference/auth"
 	"testing"
 )
 
-// The prototype is an independent oracle for the retained encoding and deletion
+// The reference implementation is an independent test oracle for the retained encoding and deletion
 // semantics. Duplicate insertion is rejected by the common comparison API.
-func TestHTPrototypeCompatibility(t *testing.T) {
+func TestHTReferenceCompatibility(t *testing.T) {
 	for seed := int64(1); seed <= 5; seed++ {
 		t.Run(fmt.Sprint(seed), func(t *testing.T) {
 			names := []string{"c0000", "c0001", "c0002", "c0003", "c0004"}
@@ -95,7 +95,7 @@ func TestHTPrototypeCompatibility(t *testing.T) {
 					}
 					q, e := ref.GenerateProof(i.URL, i.Digest[:])
 					if e != nil || !ref.VerifyProof(q) {
-						t.Fatal("prototype rejected member")
+						t.Fatal("reference rejected member")
 					}
 				}
 			}

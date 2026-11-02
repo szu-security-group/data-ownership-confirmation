@@ -47,8 +47,8 @@ The system includes the following entities.
 - We generate membership proofs for individual data items and provide Solidity
   contract source code for root registration and layered proof verification.
 - We provide synthetic and preprocessed real-dataset benchmarks for evaluating
-  construction time, proof generation time, verification time, update time, and
-  storage overhead.
+  construction time, membership proof generation time, and insertion,
+  modification and deletion time.
 
 ## Reproduce
 
@@ -70,7 +70,7 @@ go build -o bin/bench ./cmd/bench
 python3 run_experiment.py --profile smoke
 ```
 
-The guides specify dataset preparation, full experiment commands and plotting. Downloaded datasets, local environments, compiled binaries and generated measurements/figures are excluded from Git. The shared packages in the repository root are required by the experiment modules.
+The guides specify dataset preparation, full experiment commands and plotting. Downloaded datasets, local environments, compiled binaries and generated measurements/figures are excluded from Git. The shared data-generation, data-type and hashing packages in the repository root are required by the experiment modules.
 
 ### Plot the figures
 

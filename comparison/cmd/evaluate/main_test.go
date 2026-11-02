@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestOriginalSelection(t *testing.T) {
+func TestSequentialSelection(t *testing.T) {
 	for j := 0; j < 1000; j++ {
 		if proveIndex(j, 10000) != j || modifyIndex(j, 10000) != 5000+j {
 			t.Fatal("query selection does not match the protocol")
@@ -18,7 +18,7 @@ func TestOriginalSelection(t *testing.T) {
 		t.Fatal("delete count")
 	}
 }
-func TestOriginalPayloadAndRound(t *testing.T) {
+func TestPayloadAndRound(t *testing.T) {
 	cfg := &dataset.DatasetConfig{NumItems: 2000, NumTypes: 10, ItemSize: 1024, CompanyName: "TestCompany", Protocol: "https"}
 	gen := dataset.NewDatasetGenerator(cfg, t.TempDir())
 	old, names, e := gen.GenerateDataset()

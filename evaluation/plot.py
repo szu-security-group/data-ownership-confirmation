@@ -161,7 +161,7 @@ def plot_scale(group, output):
         for legend in fig.legends:
             legend.set_visible(False)
         fig.axes[index].set_position([.24, .24, .73, .73])
-        save(fig, output, f'remeasured_{group}_{letter}')
+        save(fig, output, f'{group}_{letter}')
     plt.close(fig)
     fig = plt.figure(figsize=(3.53, .29))
     fig.legend(handles, labels, loc='center', ncol=2, frameon=False,

@@ -6,14 +6,9 @@ import (
 	"fmt"
 	"strings"
 	"sync"
-	"time"
 )
 
-var CategoryDeadline time.Time
-var CategoryCompleted int
-var ErrBudget = errors.New("category operation time budget exceeded")
-
-// Forest changes layout without imposing the HT indexing on any alternative.
+// Forest maintains one subtree per category and hashes their ordered roots.
 type Forest struct {
 	Kind, Layout string
 	Load         float64
@@ -22,19 +17,15 @@ type Forest struct {
 	Parts        []ADS
 	Roots        []Hash
 	root         Hash
-	top          []Hash
 	stats        Metrics
 	h            *hasher
 }
 
 func NewForest(kind, layout string, m, workers int, load float64) (*Forest, error) {
-	if layout == "global" {
-		m = 1
-	}
 	if m < 1 || workers < 1 {
 		return nil, errors.New("invalid configuration")
 	}
-	if layout != "global" && layout != "flat" && layout != "tree" {
+	if layout != "flat" {
 		return nil, errors.New("invalid layout")
 	}
 	f := &Forest{Kind: kind, Layout: layout, Load: load, Workers: workers, Parts: make([]ADS, m), Roots: make([]Hash, m)}
@@ -49,9 +40,6 @@ func NewForest(kind, layout string, m, workers int, load float64) (*Forest, erro
 	return f, nil
 }
 func (f *Forest) cat(i Item) int {
-	if f.Layout == "global" {
-		return 0
-	}
 	if f.categoryIDs != nil {
 		name := URLCategory(i.URL)
 		id, ok := f.categoryIDs[name]
@@ -99,38 +87,13 @@ func (f *Forest) Build(xs []Item) error {
 	return nil
 }
 func (f *Forest) aggregate(changed int) {
-	switch f.Layout {
-	case "global":
-		f.root = f.Roots[0]
-	case "flat":
-		b := make([]byte, 0, 32*len(f.Roots))
-		for _, r := range f.Roots {
-			b = append(b, r[:]...)
-		}
-		f.root = f.h.digest(b)
-	case "tree":
-		n := power2(len(f.Roots))
-		if len(f.top) != 2*n || changed < 0 {
-			f.top = make([]Hash, 2*n)
-			for j := 0; j < n; j++ {
-				f.top[n+j] = Empty
-				if j < len(f.Roots) {
-					f.top[n+j] = f.h.digest([]byte{5}, f.Roots[j][:])
-				}
-			}
-			for j := n - 1; j > 0; j-- {
-				f.top[j] = f.h.parent(f.top[j*2], f.top[j*2+1])
-			}
-		} else {
-			j := n + changed
-			f.top[j] = f.h.digest([]byte{5}, f.Roots[changed][:])
-			for j /= 2; j > 0; j /= 2 {
-				f.top[j] = f.h.parent(f.top[2*j], f.top[2*j+1])
-			}
-		}
-		f.root = f.top[1]
+	b := make([]byte, 0, 32*len(f.Roots))
+	for _, r := range f.Roots {
+		b = append(b, r[:]...)
 	}
+	f.root = f.h.digest(b)
 }
+
 func (f *Forest) Apply(op string, i Item) error {
 	c := f.cat(i)
 	if c < 0 || c >= len(f.Parts) {
@@ -212,21 +175,14 @@ func (f *Forest) GenerateProof(i Item) (*ForestProof, error) {
 		return nil, e
 	}
 	q := &ForestProof{Category: c, CategoryCount: len(f.Parts), Sub: p}
-	switch f.Layout {
-	case "flat":
-		q.Mode = 1
-		q.Aux = make([]Hash, 0, len(f.Roots)-1)
-		for j, r := range f.Roots {
-			if j != c {
-				q.Aux = append(q.Aux, r)
-			}
-		}
-	case "tree":
-		q.Mode = 2
-		for j := power2(len(f.Parts)) + c; j > 1; j /= 2 {
-			q.Aux = append(q.Aux, f.top[j^1])
+	q.Mode = 1
+	q.Aux = make([]Hash, 0, len(f.Roots)-1)
+	for j, r := range f.Roots {
+		if j != c {
+			q.Aux = append(q.Aux, r)
 		}
 	}
+
 	return q, nil
 }
 
@@ -246,104 +202,23 @@ func Verify(kind string, root Hash, i Item, b []byte) bool {
 	if e != nil {
 		return false
 	}
-	switch mode {
-	case 0:
-		if m != 1 || c != 0 || n != 0 {
-			return false
-		}
-	case 1:
-		if n != m-1 {
-			return false
-		}
-		hs := make([]byte, 0, m*32)
-		j := 11
-		for k := 0; k < m; k++ {
-			if k == c {
-				hs = append(hs, r[:]...)
-			} else {
-				hs = append(hs, b[j:j+32]...)
-				j += 32
-			}
-		}
-		r = Sum(hs)
-	case 2:
-		height := 0
-		for k := power2(m); k > 1; k /= 2 {
-			height++
-		}
-		if n != height {
-			return false
-		}
-		r = Sum([]byte{5}, r[:])
-		for j := 0; j < n; j++ {
-			s := b[11+j*32 : 43+j*32]
-			if c&1 == 0 {
-				r = Sum([]byte{1}, r[:], s)
-			} else {
-				r = Sum([]byte{1}, s, r[:])
-			}
-			c /= 2
-		}
-	default:
+	if mode != 1 {
 		return false
 	}
+	if n != m-1 {
+		return false
+	}
+	hs := make([]byte, 0, m*32)
+	j := 11
+	for k := 0; k < m; k++ {
+		if k == c {
+			hs = append(hs, r[:]...)
+		} else {
+			hs = append(hs, b[j:j+32]...)
+			j += 32
+		}
+	}
+	r = Sum(hs)
+
 	return r == root
-}
-func (f *Forest) AddCategory(xs []Item) error {
-	CategoryCompleted = 0
-	if f.Layout == "global" {
-		for _, i := range xs {
-			if !CategoryDeadline.IsZero() && time.Now().After(CategoryDeadline) {
-				return ErrBudget
-			}
-			if e := f.Parts[0].Insert(i); e != nil {
-				return e
-			}
-			CategoryCompleted++
-		}
-		f.Roots[0] = f.Parts[0].Root()
-		f.aggregate(-1)
-		return nil
-	}
-	a, e := New(f.Kind, f.Load)
-	if e != nil {
-		return e
-	}
-	if e = a.Build(xs); e != nil {
-		return e
-	}
-	f.Parts = append(f.Parts, a)
-	f.Roots = append(f.Roots, a.Root())
-	f.aggregate(-1)
-	CategoryCompleted = len(xs)
-	return nil
-}
-func (f *Forest) DropLastCategory(xs []Item) error {
-	CategoryCompleted = 0
-	if f.Layout == "global" {
-		for _, i := range xs {
-			if !CategoryDeadline.IsZero() && time.Now().After(CategoryDeadline) {
-				return ErrBudget
-			}
-			if e := f.Parts[0].Delete(i.URL); e != nil {
-				return e
-			}
-			CategoryCompleted++
-		}
-		f.Roots[0] = f.Parts[0].Root()
-		f.aggregate(-1)
-		return nil
-	}
-	if len(f.Parts) < 2 {
-		return fmt.Errorf("cannot drop final category")
-	}
-	// Keep lifetime work counters monotonic after a subtree is retired.
-	f.stats = f.stats.Add(f.Parts[len(f.Parts)-1].Stats())
-	// Do not retain the removed tree through the slice's backing array.
-	f.Parts[len(f.Parts)-1] = nil
-	f.Parts = f.Parts[:len(f.Parts)-1]
-	f.Roots = f.Roots[:len(f.Roots)-1]
-	f.aggregate(-1)
-	CategoryCompleted = len(xs)
-	return nil
 }

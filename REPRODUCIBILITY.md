@@ -73,5 +73,6 @@ and acceptance or rejection of layered membership proofs.
 The Go prototype can be installed with `go mod download`. Wall-clock results
 for ADS construction and update operations depend on CPU, memory, Go version,
 and dataset layout. The raw real-world datasets are not redistributed in this
-repository; users should prepare them with `cmd/preprocessor/main.go` as
-described in `README.md`.
+repository; follow the dataset preparation commands in
+[comparison/README.md](comparison/README.md) and
+[evaluation/README.md](evaluation/README.md).

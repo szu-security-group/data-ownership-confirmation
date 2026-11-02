@@ -42,4 +42,4 @@ comparison/.venv/bin/python evaluation/plot.py --group all
 comparison/.venv/bin/python draw/figure4.py
 ```
 
-The manuscript panels are `performance_log_a/b.pdf`, `remeasured_scale_a/b.pdf`, `remeasured_granularity_a/b.pdf` and `operation_legend.pdf`, under `output/figures/`. Combined previews are `real_datasets`, `scale` and `granularity` (PDF/PNG). Optional `--summary PATH` and `--output DIR` arguments select another measurement summary or destination. The standalone notebook in `draw/` contains the paper-data snapshot for viewing or redrawing without running the benchmarks.
+The manuscript panels are `performance_log_a/b.pdf`, `scale_a/b.pdf`, `granularity_a/b.pdf` and `operation_legend.pdf`, under `output/figures/`. Combined previews are `real_datasets`, `scale` and `granularity` (PDF/PNG). Optional `--summary PATH` and `--output DIR` arguments select another measurement summary or destination. The standalone notebook in `draw/` contains the paper-data snapshot for viewing or redrawing without running the benchmarks.

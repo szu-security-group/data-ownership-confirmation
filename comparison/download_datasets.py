@@ -1,4 +1,4 @@
-"""Download only the original dataset releases evaluated in main.tex."""
+"""Download the dataset releases used in the paper."""
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import subprocess

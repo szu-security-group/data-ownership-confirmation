@@ -69,14 +69,9 @@ func (h *hasher) digest(p ...[]byte) (v Hash) {
 	h.Sum(v[:0])
 	return
 }
-func (h *hasher) leaf(i Item) Hash {
-	var n [4]byte
-	binary.BigEndian.PutUint32(n[:], uint32(len(i.URL)))
-	return h.digest([]byte{0}, n[:], []byte(i.URL), i.Digest[:])
-}
-func (h *hasher) parent(a, b Hash) Hash { return h.digest([]byte{1}, a[:], b[:]) }
 
 var Empty = Sum([]byte{2})
+
 var ErrMissing = errors.New("key not found")
 var ErrExists = errors.New("key already exists")
 
@@ -114,15 +109,6 @@ func power2(n int) int {
 		r *= 2
 	}
 	return r
-}
-func encodePath(dirs []byte, hs []Hash) []byte {
-	p := make([]byte, 2+33*len(hs))
-	binary.BigEndian.PutUint16(p, uint16(len(hs)))
-	for i, h := range hs {
-		p[2+33*i] = dirs[i]
-		copy(p[3+33*i:], h[:])
-	}
-	return p
 }
 func binaryRoot(i Item, p []byte) (Hash, error) {
 	if len(p) < 2 {
