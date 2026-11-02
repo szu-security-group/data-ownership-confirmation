@@ -30,3 +30,16 @@ Metadata preparation refuses to overwrite existing input files. `run.py` generat
 - Construction and update timing ends at the global root; proof timing ends at the native proof object. Insertion capacity preparation and deletion cleanup occur outside timing.
 
 `results/jobs/` stores per-round measurements and operation samples; `results/manifest.json` records inputs and protocol. `analyze.py` checks completeness and writes `output/summary.csv` and `summary.json`. `plot.py` writes the scale, category-count and real-dataset PDF/PNG figures to `output/figures/`. These commands do not modify the manuscript.
+
+## Plotting
+
+After `analyze.py` has generated `output/summary.json`, `plot.py` exports manuscript-sized vector panels and combined PDF/PNG previews. Figure 4 uses uniform blue construction bars and grouped points on a logarithmic axis for proof generation and updates. Figure 5 and Figure 6 preserve their logarithmic axes and shared operation legend.
+
+```sh
+# From the repository root; --group can be real, scale, granularity or all.
+comparison/.venv/bin/python evaluation/plot.py --group all
+# The individual figure commands use the same plotting implementation:
+comparison/.venv/bin/python draw/figure4.py
+```
+
+The manuscript panels are `performance_log_a/b.pdf`, `remeasured_scale_a/b.pdf`, `remeasured_granularity_a/b.pdf` and `operation_legend.pdf`, under `output/figures/`. Combined previews are `real_datasets`, `scale` and `granularity` (PDF/PNG). Optional `--summary PATH` and `--output DIR` arguments select another measurement summary or destination. The standalone notebook in `draw/` contains the paper-data snapshot for viewing or redrawing without running the benchmarks.

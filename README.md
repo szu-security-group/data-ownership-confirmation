@@ -72,6 +72,10 @@ python3 run_experiment.py --profile smoke
 
 The guides specify dataset preparation, full experiment commands and plotting. Downloaded datasets, local environments, compiled binaries and generated measurements/figures are excluded from Git. The shared packages in the repository root are required by the experiment modules.
 
+### Plot the figures
+
+[draw/paper_experiment_figures.ipynb](draw/paper_experiment_figures.ipynb) contains the five experiment figures, their paper-data snapshot and saved previews; it runs without external data files. To plot measurements produced by running the experiments, use `evaluation/plot.py` (Figures 4--6) and `comparison/analyze.py` (the two structure-comparison figures). The `draw/figure4.py`, `figure5.py` and `figure6.py` commands call the same evaluation plotting code rather than maintaining separate hard-coded measurements.
+
 For the on-chain evaluation, use Node.js 20.x and run:
 
 ```sh
