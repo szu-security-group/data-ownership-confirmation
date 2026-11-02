@@ -4,8 +4,8 @@ const hre = require("hardhat");
 const { deployContracts } = require("./lib/deploy-contracts");
 const { buildLayeredProofFixture } = require("./lib/gas-fixtures");
 
-const GAS_PRICE_GWEI = 1.61;
-const ETH_USD = 3158.53;
+const GAS_PRICE_GWEI = 2.46;
+const ETH_USD = 2894.22;
 const REGISTER_VALID_PERIOD = 365 * 24 * 60 * 60;
 const REGISTER_IDENTITY = "Test Company Ltd.";
 const REGISTER_DESCRIPTION =

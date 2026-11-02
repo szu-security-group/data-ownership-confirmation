@@ -54,7 +54,7 @@ The report lists the gas and the corresponding ETH/USD conversion for every
 Table III row.
 
 The USD amounts in the paper are deterministic conversions from the fixed
-1.61 Gwei gas price and 3158.53 ETH/USD exchange rate encoded in
+2.46 Gwei gas price and 2894.22 ETH/USD exchange rate encoded in
 `scripts/reproduce-table-iii.js`. They are not current mainnet fee estimates.
 
 ## Contract Tests
